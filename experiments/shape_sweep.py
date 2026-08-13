@@ -1,7 +1,7 @@
 """Timing sweep for the shape-leak experiment.
 
 Measures execution time of Triton matmul and cuBLAS matmul across a range
-of K values, holding M=N=1024 fixed. Writes raw timings to CSV.
+of varying K tile sizes, holding M=N=1024 fixed. Writes raw timings to CSV.
 """
 
 import argparse
@@ -15,21 +15,17 @@ from src.matmul_kernel import matmul as triton_matmul
 
 # --- CONFIG ---------------------------------------------------------------
 
-# TODO: define the full shape list here as a list of K values.
-# For dry-run mode, you'll want a shorter version — think about how to
-# express that (a separate list? a slice of the main list?).
 SHAPE_KS_FULL = [512, 1024, 1536, 2048, 3072, 4096]
 SHAPE_KS_DRY = [1024, 2048]
 
-M = 1024
-N = 1024
+M, N = 1024, 1024
 
-WARMUP_TRIALS_FULL = 10
-TIMED_TRIALS_FULL = 100
+WARMUP_TRIALS = 10
+NUM_TRIALS = 100
 
-# TODO: pick reasonable values for dry-run (much smaller)
+# pick reasonable values for dry-run
 WARMUP_TRIALS_DRY = 3
-TIMED_TRIALS_DRY = 5
+NUM_TRIALS_DRY = 5
 
 
 # --- TIMING HELPER --------------------------------------------------------
@@ -65,7 +61,7 @@ def measure_shape_impl(
         fn(a, b)
     torch.cuda.synchronize()
 
-    # we want each measurement to be independent).
+    # we want each measurement to be independent.
     for trial in range(timed_trials):
         a = torch.randn(M, k, device='cuda', dtype=torch.float16)
         b = torch.randn(k, N, device='cuda', dtype=torch.float16)
@@ -83,35 +79,43 @@ def measure_shape_impl(
 # --- MAIN -----------------------------------------------------------------
 
 def main():
-    # TODO: set up argparse with a --dry-run flag.
-    # TODO: pick the shape list and trial counts based on the flag.
+    # create a flag to run the minimum number of trials for sanity checking.
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dry-run', action='store_true',
+                        help='Run with reduced shapes and trials for quick testing.')
+    args = parser.parse_args()
 
-    # For now, demo the pattern for one shape (K=1024) and both impls:
-    k = 1024
+    if args.dry_run:
+        shape_list = SHAPE_KS_DRY
+        warmup = WARMUP_TRIALS_DRY
+        timed = NUM_TRIALS_DRY
+    else:
+        shape_list = SHAPE_KS_FULL
+        warmup = WARMUP_TRIALS
+        timed = NUM_TRIALS
+
     all_rows = []
+    for k in shape_list:
+        triton_rows = measure_shape_impl(
+            impl_name='triton',
+            fn=triton_matmul,
+            k=k,
+            warmup_trials=warmup,
+            timed_trials=timed,
+        )
+        all_rows.extend(triton_rows)
 
-    triton_rows = measure_shape_impl(
-        impl_name='triton',
-        fn=triton_matmul,
-        k=k,
-        warmup_trials=WARMUP_TRIALS_FULL,
-        timed_trials=TIMED_TRIALS_FULL,
-    )
-    all_rows.extend(triton_rows)
-
-    cublas_rows = measure_shape_impl(
-        impl_name='cublas',
-        fn=torch.matmul,
-        k=k,
-        warmup_trials=WARMUP_TRIALS_FULL,
-        timed_trials=TIMED_TRIALS_FULL,
-    )
-    all_rows.extend(cublas_rows)
-
-    # TODO: wrap the two calls above in a loop over your shape list.
+        cublas_rows = measure_shape_impl(
+            impl_name='cublas',
+            fn=torch.matmul,
+            k=k,
+            warmup_trials=warmup,
+            timed_trials=timed,
+        )
+        all_rows.extend(cublas_rows)
 
     # Write CSV.
-    out_dir = Path('experiments/shape_timing/data')
+    out_dir = Path('experiments/data')
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / 'timings.csv'
 
