@@ -73,9 +73,6 @@ def matmul(a, b, activation=""):
     # 1D launch grid: one program per BLOCK_M x BLOCK_N block of C.
     grid = lambda META: (triton.cdiv(M, META['BLOCK_SIZE_M']) * triton.cdiv(N, META['BLOCK_SIZE_N']),)
 
-    # Single hardcoded config so timing reflects one compiled kernel.
-    
-    # 128/64/32 is a middle-of-the-road block that fits comfortably on a T4.
     matmul_kernel[grid](
         a, b, c,
         M, N, K,
