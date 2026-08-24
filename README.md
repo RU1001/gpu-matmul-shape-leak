@@ -1,7 +1,7 @@
 # Timing Side Channel: GPU Matmul Kernels Leak Tensor Shape 
 
 Demonstrating that a GPU matrix multiplication kernel timing leaks the reduction dimension K via the k-loop iteration count.
-This project was inspired by Paul C. Kocher's Paper: [text](https://paulkocher.com/doc/TimingAttacks.pdf)
+This project was inspired by Paul C. Kocher's Paper: Choose standard [Timing Attacks on Implementations of Diffie-Hellman, RSA, DSS, and Other Systems](https://paulkocher.com/doc/TimingAttacks.pdf)
 
 ## The Findings
 associated case study:...
