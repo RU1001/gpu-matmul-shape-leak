@@ -13,14 +13,12 @@ import torch
 
 from src.matmul_kernel import matmul_kernel
 
-# We call matmul_kernel directly (not the wrapper) to avoid
-# allocating the output tensor inside the timed region.
 import triton
 
 
 # --- CONFIG ---------------------------------------------------------------
 
-# Fine grid: 512 to 4096 inclusive, step 8.  449 K values.
+# grid: 512 to 4096 inclusive, step 8.  449 K values.
 SHAPE_KS_FULL = list(range(512, 4097, 8))
 SHAPE_KS_DRY = [512, 520, 528, 544, 1024, 1056]
 
@@ -32,7 +30,7 @@ NUM_TRIALS = 100
 WARMUP_TRIALS_DRY = 3
 NUM_TRIALS_DRY = 5
 
-# Triton tile config — must match the kernel launch in src/matmul_kernel.py.
+# Triton tile config — from matmul_kernel.py
 BLOCK_SIZE_M = 128
 BLOCK_SIZE_N = 64
 BLOCK_SIZE_K = 32
@@ -90,7 +88,7 @@ def make_cublas_launcher(a, b, c):
     return launch
 
 
-# --- ONE SHAPE, ONE IMPL --------------------------------------------------
+# --- ONE SHAPE --------------------------------------------------
 
 def measure_shape_impl(
     impl_name: str,
@@ -143,7 +141,7 @@ def main():
         warmup = WARMUP_TRIALS
         timed = NUM_TRIALS
 
-    # Shuffle K order to decorrelate thermal drift from K.
+    # Shuffle K order 
     random.seed(42)
     random.shuffle(shape_list)
 
@@ -171,7 +169,7 @@ def main():
         )
         all_rows.extend(cublas_rows)
 
-    # Sort by (impl, shape_k, trial) before writing so the CSV is readable.
+    # Sort by (impl, shape_k, trial) before writing 
     all_rows.sort(key=lambda r: (r['impl'], r['shape_k'], r['trial']))
 
     # Write CSV.
