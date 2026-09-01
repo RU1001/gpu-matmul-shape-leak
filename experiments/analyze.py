@@ -26,7 +26,7 @@ def tooth_amplitude(res, k, lo, hi):
     """
     m = (k >= lo) & (k < hi)
     r = res[m]
-    return np.mean([r[i:i + 4].ptp() for i in range(0, len(r) - 4, 4)])
+    return np.mean([np.ptp(r[i:i + 4]) for i in range(0, len(r) - 4, 4)])
 
 
 def main():
