@@ -25,7 +25,7 @@ SHAPE_KS_DRY = [512, 520, 528, 544, 1024, 1056]
 M, N = 1024, 1024
 
 WARMUP_TRIALS = 10
-NUM_TRIALS = 100
+NUM_TRIALS = 15
 
 WARMUP_TRIALS_DRY = 3
 NUM_TRIALS_DRY = 5
@@ -112,7 +112,7 @@ def measure_shape_impl(
     torch.cuda.synchronize()
 
     # Timed trials.
-    INNER = 50
+    INNER = 20
     rows = []
     for trial in range(timed_trials):
         ms = time_block(launcher, inner=INNER)
