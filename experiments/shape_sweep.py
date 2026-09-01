@@ -112,10 +112,10 @@ def measure_shape_impl(
     torch.cuda.synchronize()
 
     # Timed trials.
-    INNER = 20
+    n_launches = 20
     rows = []
     for trial in range(timed_trials):
-        ms = time_block(launcher, inner=INNER)
+        ms = time_block(launcher, inner=n_launches)
         rows.append({
             'shape_k': k,
             'impl': impl_name,
