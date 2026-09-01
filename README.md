@@ -16,8 +16,8 @@ experiments/
   shape_sweep.py         K-timing sweep (512..4096, step 8), shuffled order to mitigate unwanted output/influence from thermal drift
   analyze.py             Generates plots and summary CSV from raw timings
   data/
-    timings.csv          Raw per-trial timings (449 K values x 100 trials x 2 stacks)
-    summary.csv          Per-shape mean and std
+    timings.csv          Raw per-trial timings (449 K values × 15 trials × 2 implementations), where each trial is the mean over 20 timed launches.
+    summary.csv          Per-shape mean, std, and trial count
   plots/
     timing_vs_shape.png  Main result figure
 ```
