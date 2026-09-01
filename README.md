@@ -4,7 +4,7 @@ Demonstrating that a GPU matrix multiplication kernel timing leaks the reduction
 This project was inspired by Paul C. Kocher's Paper:[Timing Attacks on Implementations of Diffie-Hellman, RSA, DSS, and Other Systems](https://paulkocher.com/doc/TimingAttacks.pdf)
 
 ## The Findings
-associated case study:...
+associated case study:[How MatMul Kernel Timing Leaks Tensor Shape](https://ominaelsheikh.substack.com/p/how-matmul-kernel-timing-leaks-tensor)
 
 ## Repo structure
  
