@@ -41,16 +41,17 @@ NUM_STAGES = 2
 
 # --- TIMING HELPER --------------------------------------------------------
 
-def time_one_call(fn) -> float:
-    """Time a single zero-arg call using CUDA events.  Returns ms."""
+def time_block(fn, inner=50) -> float:
+    """Mean ms per call over `inner` launches timed as one block."""
     start = torch.cuda.Event(enable_timing=True)
     end = torch.cuda.Event(enable_timing=True)
+    torch.cuda.synchronize()
     start.record()
-    fn()
+    for _ in range(inner):
+        fn()
     end.record()
     torch.cuda.synchronize()
-    return start.elapsed_time(end)
-
+    return start.elapsed_time(end) / inner
 
 # --- TRITON RAW LAUNCH ----------------------------------------------------
 
@@ -111,9 +112,10 @@ def measure_shape_impl(
     torch.cuda.synchronize()
 
     # Timed trials.
+    INNER = 50
     rows = []
     for trial in range(timed_trials):
-        ms = time_one_call(launcher)
+        ms = time_block(launcher, inner=INNER)
         rows.append({
             'shape_k': k,
             'impl': impl_name,
@@ -122,7 +124,6 @@ def measure_shape_impl(
         })
 
     return rows
-
 
 # --- MAIN -----------------------------------------------------------------
 
